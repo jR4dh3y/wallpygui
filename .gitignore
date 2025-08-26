@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+
+# PyInstaller/Build
+build/
+dist/
+*.spec
+
+# Virtual envs
+.venv/
+
+# Editors
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

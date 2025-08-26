@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Wallpaper Manager
+Exec=wallgui
+Icon=wallgui
+Categories=Graphics;Utility;
+Terminal=false
