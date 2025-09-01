@@ -5,6 +5,8 @@ from gi.repository import Gtk
 from typing import Callable, Optional
 from utils.constants import APP_TITLE
 
+from utils.constants import APP_TITLE
+
 
 class HeaderBar(Gtk.Box):
     """Top header bar with title, search, and global actions."""
