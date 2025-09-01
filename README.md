@@ -1,34 +1,31 @@
 # wallgui
 
-Modern GTK4 wallpaper manager with image, video, favorites, history, themes, and auto‑cycle support.
+Modern GTK4 wallpaper manager with fast directory browsing, search, and support for image and video wallpapers.
 
-## Features (core)
-- Gallery + preview
-- Favorites & history
-- Image & video wallpapers (swww / mpvpaper)
-- Auto cycle & random pick
-- Themeable UI + color scheme generation (wallust)
+## Features
+- Gallery view with async thumbnail loading
+- Set image wallpapers via swww (Wayland)
+- Set video wallpapers via mpvpaper (Hyprland/Niri)
+- Themeable UI (Catppuccin and others)
 
 ## Dependencies
-Required: gtk4 python python-gobject swww mpvpaper wallust ffmpeg
-Optional: hyprland (for hyprctl integration)
+Required: gtk4, python, python-gobject, swww, mpvpaper, ffmpeg
+Optional: hyprland or niri (for monitor detection), wallust (for colorscheme, not invoked by default)
 
 ## Run from source
 ```bash
-git clone https://github.com/jr4dh3y/wallgui.git
-cd wallgui
+git clone https://github.com/jR4dh3y/wallpygui.git
+cd wallpygui
 python3 wallgui.py
 ```
 
-## AUR (Arch)
-Incoming packages:
-- wallgui (build from source)
-- wallgui-bin (prebuilt binary)
+## Config
+Files are stored in `~/.cache/wallgui/`:
+- `config.json`
 
-## Config files
-Stored in: ~/.cache/wallgui/
-- config.json / history.json / favorites.json
+## Packaging
+See `PKGBUILD` for Arch packaging. A prebuilt spec is available via `wallgui.spec`.
 
 ## License
-MIT – see LICENSE.
+MIT – see `LICENSE`.
 

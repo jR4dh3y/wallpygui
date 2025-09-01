@@ -3,9 +3,9 @@
 
 import gi
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 from pathlib import Path
-from typing import Optional  # noqa: F401 (future use)
+import threading
 
 from utils.constants import APP_ID, APP_TITLE
 from utils.storage import StorageManager
@@ -122,12 +122,31 @@ class WallpaperApp(Gtk.Application):
             print(f"[wallgui] File not found: {path}")
             return
 
-        try:
-            set_wallpaper(path, resize)
-            self._update_component_states()
+        # Disable the button and show progress while applying to avoid UI freeze
+        if hasattr(self, "footer") and getattr(self.footer, "apply_btn", None):
+            self.footer.apply_btn.set_sensitive(False)
+            self.footer.apply_btn.set_label("Applying…")
 
-        except Exception as e:
-            print(f"[wallgui] Error applying wallpaper: {e}")
+        def worker():
+            success = True
+            try:
+                set_wallpaper(path, resize)
+            except Exception as e:
+                success = False
+                print(f"[wallgui] Error applying wallpaper: {e}")
+            finally:
+                # Re-enable controls on the GTK main loop
+                GLib.idle_add(self._on_apply_wallpaper_done, success)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_apply_wallpaper_done(self, success: bool):
+        if hasattr(self, "footer") and getattr(self.footer, "apply_btn", None):
+            self.footer.apply_btn.set_sensitive(True)
+            self.footer.apply_btn.set_label("Apply Wallpaper")
+        if success:
+            self._update_component_states()
+        return False
     
     def _on_preferences_save(self, new_config: dict):
         self.config = new_config

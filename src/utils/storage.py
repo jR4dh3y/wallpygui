@@ -28,8 +28,6 @@ class StorageManager:
             return False
     
     @staticmethod
-    
-    @staticmethod
     def load_config() -> Dict[str, Any]:
         """Load application configuration."""
         from utils.constants import CONFIG_FILE, DEFAULT_CONFIG

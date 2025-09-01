@@ -3,6 +3,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
 from typing import Callable, Optional
+from utils.constants import APP_TITLE
 
 
 class HeaderBar(Gtk.Box):
@@ -15,9 +16,9 @@ class HeaderBar(Gtk.Box):
                  on_search_changed: Optional[Callable[[str], None]] = None):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.set_css_classes(["header-box"])
-
+        
         # Title
-        title = Gtk.Label(label="Badmoshhi")
+        title = Gtk.Label(label=APP_TITLE)
         title.set_css_classes(["title-label"])
         title.set_halign(Gtk.Align.START)
         self.append(title)
