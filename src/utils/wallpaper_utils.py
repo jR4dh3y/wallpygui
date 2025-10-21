@@ -125,6 +125,9 @@ def use_mpv(img_path: str) -> None:
             pass
 
         return []
+    # def get_vid_thumb():
+        
+
 
     outputs = get_outputs()
     width = min(o["width"] for o in outputs) if outputs else None
@@ -167,6 +170,8 @@ def use_mpv(img_path: str) -> None:
     else:
         # Fallback: try all outputs if compositor detection failed
         spawn(["mpvpaper", "-s", "-o", "no-audio loop", "*", video])
+    
+
 
 
 def set_wallpaper(img_path: str, resize: str = "crop") -> None:
@@ -192,6 +197,7 @@ def set_wallpaper(img_path: str, resize: str = "crop") -> None:
     # Save current wallpaper path
     with open(os.path.expanduser("~/.cache/wallpaper"), "w") as file:
         file.write(img_path)
+    apply_to_hyperpaper_cfg()
 
 
 def generate_cached_thumbnail(filepath: Path, size: int = 200) -> Optional[str]:
@@ -213,3 +219,33 @@ def generate_cached_thumbnail(filepath: Path, size: int = 200) -> Optional[str]:
     except Exception as e:
         print(f"Failed to generate thumbnail for {filepath}: {e}")
         return None
+
+def apply_to_hyperpaper_cfg() -> None:
+    """Apply wallpaper settings to hyprlock config if it exists."""
+    config_path = Path.home() / ".config" / "hypr" / "hyprlock.conf"
+    wallpaper_path = restore()
+    if not wallpaper_path:
+        return
+    if not config_path.exists():
+        print("Hyprlock config not found; skipping update.")
+        return
+    try:
+        lines = config_path.read_text().splitlines()
+        updated = False
+        new_lines = []
+
+        for line in lines:
+            stripped = line.lstrip()
+            if stripped.startswith("path"):
+                indent = line[: len(line) - len(stripped)]
+                new_lines.append(f'{indent}path = {wallpaper_path}')
+                updated = True
+            else:
+                new_lines.append(line)
+
+        if not updated:
+            new_lines.append(f'path = "{wallpaper_path}"')
+
+        config_path.write_text("\n".join(new_lines) + "\n")
+    except Exception as e:
+        print(f"Failed to update hyprlock config: {e}")
