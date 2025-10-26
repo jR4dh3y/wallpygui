@@ -97,7 +97,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     return """
     .main-window {{
         background: {bg};
-        border-radius: 18px;
+        border-radius: 0px;
         color: {fg};
         border: 1px solid {border};
         padding: 16px;
@@ -110,7 +110,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     }}
 
     .preview-frame {{
-        border-radius: 12px;
+        border-radius: 0px;
         border: 2px solid {accent};
         background: {bg_alt};
         margin-bottom: 12px;
@@ -118,7 +118,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     }}
 
     .path-entry, .dir-entry, .search-entry {{
-        border-radius: 8px;
+        border-radius:0px;
         padding: 8px 12px;
         background: {bg_soft};
         color: {fg};
@@ -134,7 +134,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     button {{
         background: {bg_soft};
         color: {fg};
-        border-radius: 8px;
+        border-radius: 0px;
         font-weight: 600;
         padding: 8px 16px;
         border: 1px solid {border};
@@ -172,7 +172,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     }}
 
     .gallery-frame {{
-        border-radius: 12px;
+        border-radius: 0px;
         border: 2px dashed {border};
         background: {bg_alt};
         padding: 12px;
@@ -181,7 +181,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     .thumbnail-box {{
         background: {bg_soft};
         padding: 8px;
-        border-radius: 10px;
+        border-radius: 0px;
         transition: all 0.2s ease;
         border: 1px solid transparent;
     }}
@@ -213,12 +213,12 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
 
     .history-list, .fav-list {{
         background: transparent;
-        border-radius: 8px;
+        border-radius: 0px;
     }}
 
     .history-list row, .fav-list row {{
         padding: 6px 8px;
-        border-radius: 6px;
+        border-radius: 0px;
         margin: 2px 0;
         transition: background 0.2s ease;
     }}
@@ -234,12 +234,12 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
 
     switch {{
         background: {bg_soft};
-        border-radius: 12px;
+        border-radius: 0px;
     }}
 
     switch slider {{
         background: {border_alt};
-        border-radius: 10px;
+        border-radius: 0px;
     }}
 
     switch:checked {{
@@ -270,7 +270,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
 
     .header-box {{
         background: {bg_alt};
-        border-radius: 12px;
+        border-radius: 0px;
         padding: 16px;
         margin-bottom: 16px;
         border: 1px solid {border};
@@ -278,7 +278,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
 
     .controls-box {{
         background: {bg_alt};
-        border-radius: 12px;
+        border-radius: 0px;
         padding: 16px;
         margin-bottom: 16px;
         border: 1px solid {border};
