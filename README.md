@@ -8,6 +8,8 @@ Modern GTK4 wallpaper manager with fast directory browsing, search, and support 
 - Set video wallpapers via mpvpaper (Hyprland/Niri)
 - Themeable UI (Catppuccin and others)
 
+![wallgui-screenshot](/assets/app.png)
+
 ## Dependencies
 Required: gtk4, python, python-gobject, swww, mpvpaper, ffmpeg
 Optional: hyprland or niri (for monitor detection), wallust (for colorscheme, not invoked by default)
