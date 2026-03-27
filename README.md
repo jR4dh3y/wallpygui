@@ -4,14 +4,14 @@ Modern GTK4 wallpaper manager with fast directory browsing, search, and support 
 
 ## Features
 - Gallery view with async thumbnail loading
-- Set image wallpapers via swww (Wayland)
+- Set image wallpapers via awww (Wayland)
 - Set video wallpapers via mpvpaper (Hyprland/Niri)
 - Themeable UI (Catppuccin and others)
 
 ![wallgui-screenshot](/assets/app.png)
 
 ## Dependencies
-Required: gtk4, python, python-gobject, swww, mpvpaper, ffmpeg
+Required: gtk4, python, python-gobject, awww, mpvpaper, ffmpeg
 Optional: hyprland or niri (for monitor detection), wallust (for colorscheme, not invoked by default)
 
 ## Run from source

@@ -48,19 +48,19 @@ def generate_thumbnail(video: str) -> str:
     return thumb_path
 
 
-def use_swww(img_path: str, resize: str = "crop") -> None:
-    """Set wallpaper using swww."""
+def use_awww(img_path: str, resize: str = "crop") -> None:
+    """Set wallpaper using awww."""
     subprocess.run(["pkill", "mpvpaper"])
-    # Ensure swww daemon is running; if not, initialize it
+    # Ensure awww daemon is running; if not, initialize it
     try:
-        probe = subprocess.run(["swww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        probe = subprocess.run(["awww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if probe.returncode != 0:
-            no_stdout(["swww", "init"])
+            no_stdout(["awww", "init"])
     except Exception:
         # Best-effort: continue to try setting the image
         pass
     no_stdout([
-        "swww",
+        "awww",
         "img",
         "--filter",
         "Lanczos3",
@@ -184,7 +184,7 @@ def set_wallpaper(img_path: str, resize: str = "crop") -> None:
         os.environ["WAL_BACKEND"] = "haishoku"
 
     if file_type.startswith("image/"):
-        use_swww(img_path, resize)
+        use_awww(img_path, resize)
     elif file_type.startswith("video/"):
         generate_thumbnail(img_path)  # still produce a thumb (cache) but ignore colors
         use_mpv(img_path)
