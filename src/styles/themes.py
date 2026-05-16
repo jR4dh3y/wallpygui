@@ -156,6 +156,7 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
         padding: 10px 28px;
         font-size: 14px;
         letter-spacing: 0.3px;
+        min-width: 150px;
     }}
 
     .apply-btn:hover {{
@@ -203,12 +204,23 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
         border: 1px solid {border};
     }}
 
+    flowboxchild {{
+        background: transparent;
+        border: none;
+        border-radius: 0px;
+        padding: 0px;
+    }}
+
+    flowboxchild:hover, flowboxchild:selected {{
+        background: transparent;
+    }}
+
     .thumbnail-box {{
         background: transparent;
         padding: 8px;
         border-radius: 0px;
         transition: all 0.15s ease;
-        border: 1px solid transparent;
+        border: 2px solid transparent;
     }}
 
     .thumbnail-box:hover {{

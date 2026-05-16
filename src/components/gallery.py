@@ -104,9 +104,6 @@ class Gallery(Gtk.Box):
         if generation != self._load_generation:
             return False
 
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        box.set_css_classes(["thumbnail-box"])
-
         img = Gtk.Image()
         img.set_pixel_size(160)
         img.set_size_request(170, 106)
@@ -125,6 +122,7 @@ class Gallery(Gtk.Box):
         label.set_lines(1)
 
         child_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        child_box.set_css_classes(["thumbnail-box"])
         child_box.set_size_request(178, 136)
         child_box.set_halign(Gtk.Align.CENTER)
         child_box.append(img)
@@ -152,7 +150,7 @@ class Gallery(Gtk.Box):
 
         def worker(fp=filepath, image=img):
             try:
-                thumb_path = generate_cached_thumbnail(fp, size=170)
+                thumb_path = generate_cached_thumbnail(fp, width=170, height=106)
                 if thumb_path and generation == self._load_generation:
                     GLib.idle_add(self._set_image_from_file, image, thumb_path, generation)
             except Exception:
@@ -209,6 +207,21 @@ class Gallery(Gtk.Box):
             self.selected_child = child
         except Exception:
             self.selected_child = child
+
+    def select_random(self, rng) -> Optional[str]:
+        visible_children = []
+        child = self.flow.get_first_child()
+        while child is not None:
+            if child.get_visible() and hasattr(child, "filepath"):
+                visible_children.append(child)
+            child = child.get_next_sibling()
+
+        if not visible_children:
+            return None
+
+        selected = rng.choice(visible_children)
+        self._select_child(selected)
+        return selected.filepath
     
     def _clear_flowbox(self):
         try:

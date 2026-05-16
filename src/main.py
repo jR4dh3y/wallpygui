@@ -5,6 +5,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GLib
 from pathlib import Path
+import random
 import threading
 
 from utils.constants import APP_ID, APP_TITLE
@@ -52,6 +53,7 @@ class WallpaperApp(Gtk.Application):
 
         self.header = HeaderBar(
             on_open_dir=self._on_open_dir,
+            on_random=self._on_random_wallpaper,
             on_search_changed=lambda q: self.gallery.set_filter(q)
         )
         container.append(self.header)
@@ -123,6 +125,14 @@ class WallpaperApp(Gtk.Application):
 
     def _on_resize_changed(self, mode: str):
         self.resize_var = mode
+
+    def _on_random_wallpaper(self):
+        path = self.gallery.select_random(random)
+        if path:
+            self._selected_path = path
+            if hasattr(self, "footer"):
+                self.footer.set_selected_path(path)
+            self._on_apply_wallpaper(path, self.resize_var)
     
     def _on_apply_wallpaper(self, path: str, resize: str):
         if not path or not Path(path).exists():

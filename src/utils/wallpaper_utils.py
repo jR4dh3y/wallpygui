@@ -205,13 +205,17 @@ def set_wallpaper(img_path: str, resize: str = "crop") -> None:
     apply_to_hyperpaper_cfg()
 
 
-def generate_cached_thumbnail(filepath: Path, size: int = 200) -> Optional[str]:
-    """Generate and cache thumbnail for a file."""
+def generate_cached_thumbnail(filepath: Path, width: int = 170, height: int = 106) -> Optional[str]:
+    """Generate and cache thumbnail for a file.
+
+    Produces a uniformly-sized thumbnail by scaling to cover the target
+    dimensions and then centre-cropping to exactly ``width`` x ``height``.
+    """
     try:
         filepath = filepath.expanduser()
         stat = filepath.stat()
         cache_key = hashlib.sha256(
-            f"{filepath.resolve()}:{stat.st_mtime_ns}:{stat.st_size}:{size}".encode()
+            f"{filepath.resolve()}:{stat.st_mtime_ns}:{stat.st_size}:{width}x{height}".encode()
         ).hexdigest()
         thumb_dir = CACHE_DIR / "thumbnails"
         thumb_dir.mkdir(parents=True, exist_ok=True)
@@ -220,7 +224,11 @@ def generate_cached_thumbnail(filepath: Path, size: int = 200) -> Optional[str]:
         if thumb_path.exists():
             return str(thumb_path)
 
-        filters = f"scale={size}:{size}:force_original_aspect_ratio=decrease"
+        # Scale to *cover* the target rect, then crop to exact size
+        filters = (
+            f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+            f"crop={width}:{height}"
+        )
         if filepath.suffix.lower() in {".mp4", ".mkv", ".mov"}:
             filters = f"thumbnail,{filters}"
 
