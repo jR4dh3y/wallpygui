@@ -15,9 +15,7 @@ PKGVER=${PKGVER:-$(git describe --tags --abbrev=0 2>/dev/null || echo 0.0.1)}
 # Ensure optimized bytecode generation (removes asserts, docstrings level 1)
 export PYTHONOPTIMIZE=1
 
-SPEC=wallgui.spec
-
-pyinstaller --clean --noconfirm "$SPEC"
+pyinstaller --clean --noconfirm --name wallgui wallgui.py
 
 # Rename for release asset convenience
 if [ -d dist/wallgui ]; then

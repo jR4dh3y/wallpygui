@@ -3,7 +3,8 @@ import os
 import subprocess
 from pathlib import Path
 from typing import Optional
-import getpass
+import hashlib
+import shutil
 
 from utils.constants import CACHE_DIR
 
@@ -36,21 +37,21 @@ def spawn(cmd: list) -> subprocess.Popen:
     )
 
 
-_USER_TAG = getpass.getuser() or "user"
+def stop_video_wallpaper() -> None:
+    """Stop any existing mpvpaper process before switching wallpaper modes."""
+    if shutil.which("pkill"):
+        no_stdout(["pkill", "mpvpaper"])
 
 
-def generate_thumbnail(video: str) -> str:
-    """Generate thumbnail for video file."""
-    thumb_path = f"/tmp/wallgui-{_USER_TAG}-thumbnail.png"
-    if Path(thumb_path).exists():
-        os.remove(thumb_path)
-    no_stdout(["ffmpeg", "-i", video, "-vf", "thumbnail", "-frames:v", "1", thumb_path])
-    return thumb_path
+def reload_hyprland_if_running() -> None:
+    """Reload Hyprland only when this process is running inside Hyprland."""
+    if os.getenv("HYPRLAND_INSTANCE_SIGNATURE") and shutil.which("hyprctl"):
+        no_stdout(["hyprctl", "reload"])
 
 
 def use_awww(img_path: str, resize: str = "crop") -> None:
     """Set wallpaper using awww."""
-    subprocess.run(["pkill", "mpvpaper"])
+    stop_video_wallpaper()
     # Ensure awww daemon is running; if not, initialize it
     try:
         probe = subprocess.run(["awww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -77,6 +78,8 @@ def use_awww(img_path: str, resize: str = "crop") -> None:
 def use_mpv(img_path: str) -> None:
     """Set video wallpaper using mpvpaper, supporting Hyprland and Niri."""
     import json
+
+    stop_video_wallpaper()
 
     def get_outputs() -> list[dict]:
         # Try Hyprland
@@ -125,10 +128,6 @@ def use_mpv(img_path: str) -> None:
             pass
 
         return []
-    # def get_vid_thumb():
-        
-
-
     outputs = get_outputs()
     width = min(o["width"] for o in outputs) if outputs else None
     height = min(o["height"] for o in outputs) if outputs else None
@@ -150,18 +149,29 @@ def use_mpv(img_path: str) -> None:
 
     video = img_path
     if width and v_width > width:
-        scaled = f"/tmp/wallgui-{_USER_TAG}-scaled.mp4"
-        no_stdout([
-            "ffmpeg",
-            "-y",
-            "-i",
-            img_path,
-            "-vf",
-            f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
-            f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2",
-            scaled,
-        ])
-        video = scaled
+        source = Path(img_path).resolve()
+        source_stat = source.stat()
+        scale_key = hashlib.sha256(
+            f"{source}:{source_stat.st_mtime_ns}:{source_stat.st_size}:{width}x{height}".encode()
+        ).hexdigest()
+        scaled = CACHE_DIR / "scaled-videos" / f"{scale_key}.mp4"
+        scaled.parent.mkdir(parents=True, exist_ok=True)
+        if not scaled.exists():
+            result = no_stdout([
+                "ffmpeg",
+                "-y",
+                "-i",
+                img_path,
+                "-vf",
+                f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+                f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2",
+                str(scaled),
+            ])
+            if result.returncode != 0:
+                scaled.unlink(missing_ok=True)
+
+        if scaled.exists():
+            video = str(scaled)
 
     if outputs:
         for o in outputs:
@@ -170,10 +180,6 @@ def use_mpv(img_path: str) -> None:
     else:
         # Fallback: try all outputs if compositor detection failed
         spawn(["mpvpaper", "-s", "-o", "no-audio loop", "*", video])
-    
-
-
-
 def set_wallpaper(img_path: str, resize: str = "crop") -> None:
     """Apply wallpaper depending on type (image/video)."""
     file_type = subprocess.check_output([
@@ -186,12 +192,11 @@ def set_wallpaper(img_path: str, resize: str = "crop") -> None:
     if file_type.startswith("image/"):
         use_awww(img_path, resize)
     elif file_type.startswith("video/"):
-        generate_thumbnail(img_path)  # still produce a thumb (cache) but ignore colors
         use_mpv(img_path)
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 
-    no_stdout(["hyprctl", "reload"])
+    reload_hyprland_if_running()
     # External colorscheme command removed
 
     # Save current wallpaper path
@@ -203,19 +208,28 @@ def set_wallpaper(img_path: str, resize: str = "crop") -> None:
 def generate_cached_thumbnail(filepath: Path, size: int = 200) -> Optional[str]:
     """Generate and cache thumbnail for a file."""
     try:
-        if filepath.suffix.lower() in {".mp4", ".mkv", ".mov"}:
-            # Video thumbnail
-            thumb_path = CACHE_DIR / f"{filepath.stem}_thumb.png"
-            if (not thumb_path.exists()) or (thumb_path.stat().st_mtime < filepath.stat().st_mtime):
-                no_stdout([
-                    "ffmpeg", "-y", "-i", str(filepath), 
-                    "-vf", "thumbnail,scale=320:-1", 
-                    "-frames:v", "1", str(thumb_path)
-                ])
+        filepath = filepath.expanduser()
+        stat = filepath.stat()
+        cache_key = hashlib.sha256(
+            f"{filepath.resolve()}:{stat.st_mtime_ns}:{stat.st_size}:{size}".encode()
+        ).hexdigest()
+        thumb_dir = CACHE_DIR / "thumbnails"
+        thumb_dir.mkdir(parents=True, exist_ok=True)
+        thumb_path = thumb_dir / f"{cache_key}.png"
+
+        if thumb_path.exists():
             return str(thumb_path)
-        else:
-            # Image thumbnail - return path for GTK to handle scaling
-            return str(filepath)
+
+        filters = f"scale={size}:{size}:force_original_aspect_ratio=decrease"
+        if filepath.suffix.lower() in {".mp4", ".mkv", ".mov"}:
+            filters = f"thumbnail,{filters}"
+
+        result = no_stdout([
+            "ffmpeg", "-y", "-i", str(filepath),
+            "-vf", filters,
+            "-frames:v", "1", str(thumb_path)
+        ])
+        return str(thumb_path) if result.returncode == 0 and thumb_path.exists() else None
     except Exception as e:
         print(f"Failed to generate thumbnail for {filepath}: {e}")
         return None

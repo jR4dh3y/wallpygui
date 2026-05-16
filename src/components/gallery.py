@@ -3,7 +3,7 @@
 
 import gi
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GLib, GdkPixbuf
+from gi.repository import Gtk, GLib
 from pathlib import Path
 import threading
 from typing import Callable, Optional
@@ -29,6 +29,7 @@ class Gallery(Gtk.Box):
         self._thumb_queue = []  # list of (Path, Gtk.Image)
         self._thumb_workers = 0
         self._max_thumb_workers = 2  # adjustable
+        self._load_generation = 0
         
         gallery_frame = Gtk.Frame(label="")
         gallery_frame.set_css_classes(["gallery-frame"])
@@ -55,7 +56,10 @@ class Gallery(Gtk.Box):
         if not path.exists() or not path.is_dir():
             print(f"Directory not found: {directory}")
             return
-        
+
+        self._load_generation += 1
+        generation = self._load_generation
+        self._thumb_queue.clear()
         self._clear_flowbox()
         self.spinner.start()
         self.loading = True
@@ -66,19 +70,20 @@ class Gallery(Gtk.Box):
                 # Show a quick initial unsorted batch to reduce perceived delay
                 head, tail = files[:30], files[30:]
                 for fp in head:
-                    if not self.loading:
+                    if not self.loading or generation != self._load_generation:
                         break
-                    GLib.idle_add(self._add_thumbnail, fp)
+                    GLib.idle_add(self._add_thumbnail, fp, generation)
                 tail.sort(key=lambda p: p.stat().st_mtime, reverse=True)
                 for fp in tail:
-                    if not self.loading:
+                    if not self.loading or generation != self._load_generation:
                         break
-                    GLib.idle_add(self._add_thumbnail, fp)
+                    GLib.idle_add(self._add_thumbnail, fp, generation)
             except Exception as e:
                 GLib.idle_add(print, f"Gallery Error: {e}")
             finally:
-                GLib.idle_add(self.spinner.stop)
-                GLib.idle_add(self._loading_done)
+                if generation == self._load_generation:
+                    GLib.idle_add(self.spinner.stop)
+                    GLib.idle_add(self._loading_done)
 
         threading.Thread(target=scan_worker, daemon=True).start()
         
@@ -86,8 +91,11 @@ class Gallery(Gtk.Box):
         self.search_text = (query or "").lower().strip()
         self._apply_filter()
 
-    def _add_thumbnail(self, filepath: Path):
+    def _add_thumbnail(self, filepath: Path, generation: int):
         """Create a thumbnail entry quickly, then load image asynchronously."""
+        if generation != self._load_generation:
+            return False
+
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         box.set_css_classes(["thumbnail-box"])
 
@@ -116,27 +124,27 @@ class Gallery(Gtk.Box):
         child.add_controller(self._make_click_controller(child))
         self.flow.append(child)
 
-        self._thumb_queue.append((filepath, img))
+        self._thumb_queue.append((filepath, img, generation))
         self._maybe_start_thumb_worker()
         return False
 
     def _maybe_start_thumb_worker(self):
         if self._thumb_workers >= self._max_thumb_workers or not self._thumb_queue:
             return
-        filepath, img = self._thumb_queue.pop(0)
+        filepath, img, generation = self._thumb_queue.pop(0)
+        if generation != self._load_generation:
+            self._maybe_start_thumb_worker()
+            return
         self._thumb_workers += 1
 
         def worker(fp=filepath, image=img):
             try:
-                if fp.suffix.lower() in {".mp4", ".mkv", ".mov"}:
-                    thumb_path = generate_cached_thumbnail(fp)
-                    if thumb_path:
-                        GLib.idle_add(lambda p=thumb_path, im=image: im.set_from_file(p))
-                else:
-                    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(fp), 180, 120, True)
-                    GLib.idle_add(lambda pb=pixbuf, im=image: im.set_from_pixbuf(pb))
+                thumb_path = generate_cached_thumbnail(fp, size=180)
+                if thumb_path and generation == self._load_generation:
+                    GLib.idle_add(self._set_image_from_file, image, thumb_path, generation)
             except Exception:
-                GLib.idle_add(lambda im=image: im.set_from_icon_name("image-missing"))
+                if generation == self._load_generation:
+                    GLib.idle_add(lambda im=image: im.set_from_icon_name("image-missing"))
             finally:
                 def done():
                     self._thumb_workers -= 1
@@ -146,6 +154,11 @@ class Gallery(Gtk.Box):
 
         threading.Thread(target=worker, daemon=True).start()
         self._maybe_start_thumb_worker()
+
+    def _set_image_from_file(self, image: Gtk.Image, path: str, generation: int):
+        if generation == self._load_generation:
+            image.set_from_file(path)
+        return False
     
     def _make_click_controller(self, child):
         gesture = Gtk.GestureClick()

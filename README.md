@@ -17,7 +17,7 @@ Modern GTK4 wallpaper manager for Wayland desktops, built for fast browsing, sea
 
 Required: `gtk4`, `python`, `python-gobject`, `awww`, `mpvpaper`, `ffmpeg`
 
-Optional: `hyprland` or `niri` for monitor detection, `wallust` for colorscheme workflows.
+Optional: `hyprland` or `niri` for monitor detection.
 
 ## Run from source
 
