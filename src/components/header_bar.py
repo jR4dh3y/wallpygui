@@ -12,40 +12,31 @@ class HeaderBar(Gtk.Box):
     def __init__(self,
                  on_open_dir: Callable[[], None],
                  on_random: Optional[Callable[[], None]] = None,
-                 on_prefs: Optional[Callable[[], None]] = None,
                  on_search_changed: Optional[Callable[[str], None]] = None):
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.set_css_classes(["header-box"])
+        self.set_hexpand(True)
         
-        # Title
-        title = Gtk.Label(label=APP_TITLE)
+        title = Gtk.Label(label=APP_TITLE.replace(" Manager", ""))
         title.set_css_classes(["title-label"])
         title.set_halign(Gtk.Align.START)
         self.append(title)
 
-        # Spacer
-        self.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
-
-        # Search
         self.search_entry = Gtk.Entry()
-        self.search_entry.set_placeholder_text("Search wallpapers...")
+        self.search_entry.set_placeholder_text("Search")
         self.search_entry.set_css_classes(["search-entry"])
         if on_search_changed is not None:
             self.search_entry.connect("changed", lambda e: on_search_changed(e.get_text()))
         self.search_entry.set_hexpand(True)
         self.append(self.search_entry)
 
-        # Buttons
-        open_btn = Gtk.Button(label="Open Dir")
+        open_btn = Gtk.Button(label="Open Folder")
+        open_btn.set_css_classes(["tool-btn"])
         open_btn.connect("clicked", lambda *_: on_open_dir())
         self.append(open_btn)
 
         if on_random is not None:
             random_btn = Gtk.Button(label="Random")
+            random_btn.set_css_classes(["tool-btn"])
             random_btn.connect("clicked", lambda *_: on_random())
             self.append(random_btn)
-
-        if on_prefs is not None:
-            prefs_btn = Gtk.Button(label="Preferences")
-            prefs_btn.connect("clicked", lambda *_: on_prefs())
-            self.append(prefs_btn)

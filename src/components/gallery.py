@@ -3,7 +3,7 @@
 
 import gi
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Pango
 from pathlib import Path
 import threading
 from typing import Callable, Optional
@@ -17,7 +17,8 @@ class Gallery(Gtk.Box):
     
     def __init__(self, on_thumbnail_selected: Optional[Callable[[str], None]] = None,
                  on_thumbnail_double_clicked: Optional[Callable[[str], None]] = None):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.set_vexpand(True)
 
         self.on_thumbnail_selected = on_thumbnail_selected
         self.on_thumbnail_double_clicked = on_thumbnail_double_clicked
@@ -31,22 +32,25 @@ class Gallery(Gtk.Box):
         self._max_thumb_workers = 2  # adjustable
         self._load_generation = 0
         
-        gallery_frame = Gtk.Frame(label="")
-        gallery_frame.set_css_classes(["gallery-frame"])
-        
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scroll.set_min_content_height(450)
+        scroll.set_vexpand(True)
+        scroll.set_css_classes(["gallery-scroll"])
         
         self.flow = Gtk.FlowBox()
         self.flow.set_valign(Gtk.Align.START)
         self.flow.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.flow.set_min_children_per_line(3)
-        self.flow.set_max_children_per_line(8)
+        self.flow.set_min_children_per_line(4)
+        self.flow.set_max_children_per_line(10)
+        self.flow.set_row_spacing(8)
+        self.flow.set_column_spacing(8)
+        self.flow.set_margin_top(4)
+        self.flow.set_margin_bottom(4)
+        self.flow.set_margin_start(4)
+        self.flow.set_margin_end(4)
         
         scroll.set_child(self.flow)
-        gallery_frame.set_child(scroll)
-        self.append(gallery_frame)
+        self.append(scroll)
         
         self.spinner = Gtk.Spinner()
         self.append(self.spinner)
@@ -100,7 +104,8 @@ class Gallery(Gtk.Box):
         box.set_css_classes(["thumbnail-box"])
 
         img = Gtk.Image()
-        img.set_pixel_size(180)
+        img.set_pixel_size(152)
+        img.set_size_request(168, 104)
         # Placeholder icon until loaded
         if filepath.suffix.lower() in {".mp4", ".mkv", ".mov"}:
             img.set_from_icon_name("media-playback-start")
@@ -111,9 +116,12 @@ class Gallery(Gtk.Box):
         label.set_css_classes(["thumb-label"])
         label.set_halign(Gtk.Align.CENTER)
         label.set_wrap(True)
-        label.set_max_width_chars(20)
+        label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        label.set_max_width_chars(18)
+        label.set_lines(1)
 
         child_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        child_box.set_size_request(184, 138)
         child_box.append(img)
         child_box.append(label)
 
@@ -139,7 +147,7 @@ class Gallery(Gtk.Box):
 
         def worker(fp=filepath, image=img):
             try:
-                thumb_path = generate_cached_thumbnail(fp, size=180)
+                thumb_path = generate_cached_thumbnail(fp, size=168)
                 if thumb_path and generation == self._load_generation:
                     GLib.idle_add(self._set_image_from_file, image, thumb_path, generation)
             except Exception:

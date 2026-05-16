@@ -12,7 +12,6 @@ from utils.storage import StorageManager
 from utils.wallpaper_utils import set_wallpaper, restore
 from styles.themes import get_theme_css
 from components.gallery import Gallery
-from components.preferences_dialog import PreferencesDialog
 from components.header_bar import HeaderBar
 from components.footer_bar import FooterBar
 
@@ -33,7 +32,7 @@ class WallpaperApp(Gtk.Application):
         if not self.window:
             self.window = Gtk.ApplicationWindow(application=self)
             self.window.set_title(APP_TITLE)
-            self.window.set_default_size(1200, 800)
+            self.window.set_default_size(1040, 680)
             self.window.set_resizable(True)
             self.window.set_css_classes(["main-window"])
             
@@ -44,16 +43,15 @@ class WallpaperApp(Gtk.Application):
         self.window.present()
     
     def _setup_main_layout(self):
-        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        container.set_margin_top(16)
-        container.set_margin_start(16)
-        container.set_margin_end(16)
-        container.set_margin_bottom(16)
+        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        container.set_margin_top(10)
+        container.set_margin_start(10)
+        container.set_margin_end(10)
+        container.set_margin_bottom(10)
         self.window.set_child(container)
 
         self.header = HeaderBar(
             on_open_dir=self._on_open_dir,
-            on_prefs=self.show_preferences,
             on_search_changed=lambda q: self.gallery.set_filter(q)
         )
         container.append(self.header)
@@ -65,7 +63,9 @@ class WallpaperApp(Gtk.Application):
         container.append(self.gallery)
 
         self.footer = FooterBar(
-            on_apply=lambda: self._on_apply_wallpaper(self._selected_path or "", self.resize_var)
+            on_apply=lambda: self._on_apply_wallpaper(self._selected_path or "", self.resize_var),
+            on_resize_changed=self._on_resize_changed,
+            resize_mode=self.resize_var,
         )
         container.append(self.footer)
         self._selected_path = None
@@ -112,10 +112,17 @@ class WallpaperApp(Gtk.Application):
 
     def _on_gallery_selected(self, path: str):
         self._selected_path = path
+        if hasattr(self, "footer"):
+            self.footer.set_selected_path(path)
     
     def _on_gallery_double_clicked(self, path: str):
         self._selected_path = path
+        if hasattr(self, "footer"):
+            self.footer.set_selected_path(path)
         self._on_apply_wallpaper(path, self.resize_var)
+
+    def _on_resize_changed(self, mode: str):
+        self.resize_var = mode
     
     def _on_apply_wallpaper(self, path: str, resize: str):
         if not path or not Path(path).exists():
@@ -124,8 +131,7 @@ class WallpaperApp(Gtk.Application):
 
         # Disable the button and show progress while applying to avoid UI freeze
         if hasattr(self, "footer") and getattr(self.footer, "apply_btn", None):
-            self.footer.apply_btn.set_sensitive(False)
-            self.footer.apply_btn.set_label("Applying…")
+            self.footer.set_busy(True)
 
         def worker():
             success = True
@@ -142,27 +148,11 @@ class WallpaperApp(Gtk.Application):
 
     def _on_apply_wallpaper_done(self, success: bool):
         if hasattr(self, "footer") and getattr(self.footer, "apply_btn", None):
-            self.footer.apply_btn.set_sensitive(True)
-            self.footer.apply_btn.set_label("Apply Wallpaper")
+            self.footer.set_busy(False)
         if success:
             self._update_component_states()
         return False
     
-    def _on_preferences_save(self, new_config: dict):
-        self.config = new_config
-        StorageManager.save_config(new_config)
-        self._apply_theme()
-        self.resize_var = new_config.get("default_resize", "crop")
-    
-    def show_preferences(self):
-        dialog = PreferencesDialog(
-            parent=self.window,
-            config=self.config,
-            on_save=self._on_preferences_save
-        )
-        dialog.show()
-
-
 def main():
     app = WallpaperApp()
     return app.run(None)

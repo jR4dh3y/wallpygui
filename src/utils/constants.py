@@ -9,7 +9,7 @@ CACHE_DIR = Path.home() / ".cache" / "wallgui"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_FILE = CACHE_DIR / "config.json"
 
-# Default configuration (only active preferences retained)
+# Default configuration
 DEFAULT_CONFIG = {
     "default_resize": "crop",
     "theme": "catppuccin"  # catppuccin, dracula, nord, gruvbox
