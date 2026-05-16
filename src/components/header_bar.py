@@ -18,7 +18,7 @@ class HeaderBar(Gtk.Box):
         self.set_hexpand(True)
         self.set_valign(Gtk.Align.CENTER)
 
-        title = Gtk.Label(label=APP_TITLE.replace(" Manager", ""))
+        title = Gtk.Label(label=APP_TITLE)
         title.set_css_classes(["title-label"])
         title.set_halign(Gtk.Align.START)
         title.set_valign(Gtk.Align.CENTER)
