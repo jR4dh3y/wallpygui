@@ -103,9 +103,11 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     }}
 
     .title-label {{
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 22px;
+        font-weight: 800;
         color: {accent};
+        letter-spacing: 1px;
+        margin-start: 6px;
     }}
 
     .preview-frame {{
@@ -117,12 +119,13 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     }}
 
     .path-entry, .dir-entry, .search-entry {{
-        border-radius:0px;
-        padding: 7px 10px;
+        border-radius: 0px;
+        padding: 8px 14px;
         background: {bg_soft};
         color: {fg};
         border: 1px solid {border};
-        font-size: 13px;
+        font-size: 14px;
+        min-height: 20px;
     }}
 
     .path-entry:focus, .dir-entry:focus, .search-entry:focus {{
@@ -135,10 +138,11 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
         color: {fg};
         border-radius: 0px;
         font-weight: 600;
-        padding: 7px 12px;
+        padding: 8px 18px;
         border: 1px solid {border};
         transition: all 0.2s ease;
         font-size: 13px;
+        min-height: 20px;
     }}
 
     button:hover {{
@@ -146,15 +150,21 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     }}
 
     .apply-btn {{
-        background: {success};
+        background: {accent};
         color: {bg};
-        font-weight: bold;
-        padding: 8px 16px;
+        font-weight: 800;
+        padding: 10px 28px;
+        font-size: 14px;
+        letter-spacing: 0.3px;
     }}
 
     .apply-btn:hover {{
-        background: {success};
-        opacity: 0.9;
+        background: {accent};
+        opacity: 0.88;
+    }}
+
+    .apply-btn:disabled {{
+        opacity: 0.45;
     }}
 
     .scheme-btn {{
@@ -170,12 +180,15 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     }}
 
     .tool-btn {{
-        min-width: 92px;
+        min-width: 110px;
+        padding: 8px 18px;
+        font-size: 13px;
     }}
 
     combobox button {{
-        padding: 6px 10px;
-        min-width: 92px;
+        padding: 8px 12px;
+        min-width: 100px;
+        font-size: 13px;
     }}
 
     .gallery-frame {{
@@ -192,9 +205,9 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
 
     .thumbnail-box {{
         background: transparent;
-        padding: 6px;
+        padding: 8px;
         border-radius: 0px;
-        transition: all 0.2s ease;
+        transition: all 0.15s ease;
         border: 1px solid transparent;
     }}
 
@@ -203,17 +216,17 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
         border-color: {accent};
     }}
 
-    /* Selected thumbnail thin border */
+    /* Selected thumbnail */
     .selected-thumb {{
         border: 2px solid {accent};
         background: {bg_soft};
     }}
 
     .thumb-label {{
-        color: {fg};
-        font-size: 11px;
+        color: {fg_dim};
+        font-size: 12px;
         font-weight: 500;
-        margin-top: 2px;
+        margin-top: 4px;
     }}
 
     .favorite-row {{
@@ -281,28 +294,33 @@ def get_theme_css(theme_name: str = "catppuccin") -> str:
     .header-box {{
         background: {bg_alt};
         border-radius: 0px;
-        padding: 8px;
-        margin-bottom: 0px;
+        padding: 12px 16px;
         border: 1px solid {border};
     }}
 
     .controls-box {{
         background: {bg_alt};
         border-radius: 0px;
-        padding: 8px;
-        margin-bottom: 0px;
+        padding: 12px 16px;
         border: 1px solid {border};
     }}
 
     .selected-label {{
         color: {fg};
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
     }}
 
     .meta-label {{
         color: {fg_dim};
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
+    }}
+
+    /* Empty state placeholder */
+    .empty-label {{
+        color: {fg_dim};
+        font-size: 14px;
+        font-weight: 500;
     }}
     """.format(**c)

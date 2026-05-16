@@ -43,11 +43,11 @@ class WallpaperApp(Gtk.Application):
         self.window.present()
     
     def _setup_main_layout(self):
-        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        container.set_margin_top(10)
-        container.set_margin_start(10)
-        container.set_margin_end(10)
-        container.set_margin_bottom(10)
+        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        container.set_margin_top(0)
+        container.set_margin_start(0)
+        container.set_margin_end(0)
+        container.set_margin_bottom(0)
         self.window.set_child(container)
 
         self.header = HeaderBar(

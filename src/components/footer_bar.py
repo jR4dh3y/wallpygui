@@ -12,23 +12,28 @@ class FooterBar(Gtk.Box):
     def __init__(self, on_apply: Callable[[], None],
                  on_resize_changed: Callable[[str], None],
                  resize_mode: str = "crop"):
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
         self.set_css_classes(["controls-box"])
         self.set_halign(Gtk.Align.FILL)
         self.set_hexpand(True)
+        self.set_valign(Gtk.Align.CENTER)
 
         self.selected_label = Gtk.Label(label="No wallpaper selected")
         self.selected_label.set_css_classes(["selected-label"])
         self.selected_label.set_halign(Gtk.Align.START)
+        self.selected_label.set_valign(Gtk.Align.CENTER)
         self.selected_label.set_hexpand(True)
         self.selected_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        self.selected_label.set_max_width_chars(50)
         self.append(self.selected_label)
 
-        mode_label = Gtk.Label(label="Fit")
+        mode_label = Gtk.Label(label="Resize")
         mode_label.set_css_classes(["meta-label"])
+        mode_label.set_valign(Gtk.Align.CENTER)
         self.append(mode_label)
 
         self.resize_combo = Gtk.ComboBoxText()
+        self.resize_combo.set_valign(Gtk.Align.CENTER)
         for mode, label in (("crop", "Crop"), ("fit", "Fit"), ("stretch", "Stretch")):
             self.resize_combo.append(mode, label)
         self.resize_combo.set_active_id(resize_mode)
@@ -37,6 +42,7 @@ class FooterBar(Gtk.Box):
 
         apply_btn = Gtk.Button(label="Apply Wallpaper")
         apply_btn.set_css_classes(["apply-btn"])
+        apply_btn.set_valign(Gtk.Align.CENTER)
         apply_btn.set_sensitive(False)
         apply_btn.connect("clicked", lambda *_: on_apply())
         self.append(apply_btn)
