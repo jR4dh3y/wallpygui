@@ -14,7 +14,7 @@ depends=(
   'python-gobject'
 )
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('7144e7c9b3f81fb816b5fc3ad95cfcabe289f0b33d273dfa4f97950286703384')
 
 package() {
   cd "${srcdir}/${pkgname}-${pkgver}"
