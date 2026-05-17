@@ -24,12 +24,20 @@ Optional: `hyprland` or `niri` for monitor detection.
 ```bash
 git clone https://github.com/jR4dh3y/wallpygui.git
 cd wallpygui
-python3 wallgui.py
+python3 wallpygui.py
+```
+
+## AUR
+
+The package name is `wallpygui`. It installs the launcher as:
+
+```bash
+wallpygui
 ```
 
 ## Config
 
-Files are stored in `~/.cache/wallgui/`:
+Files are stored in `~/.cache/wallpygui/`:
 
 - `config.json`
 

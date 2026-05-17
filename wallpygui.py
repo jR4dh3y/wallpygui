@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wallpaper Manager - A modern GTK4 application for managing wallpapers."""
+"""WallpyGUI - A modern GTK4 application for managing wallpapers."""
 
 import sys
 import os

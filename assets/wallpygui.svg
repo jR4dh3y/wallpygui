@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="sky" x1="20" y1="14" x2="108" y2="114" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#cba6f7"/>
+      <stop offset="0.48" stop-color="#89b4fa"/>
+      <stop offset="1" stop-color="#a6e3a1"/>
+    </linearGradient>
+    <linearGradient id="shade" x1="24" y1="82" x2="104" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#313244"/>
+      <stop offset="1" stop-color="#181825"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="14" width="104" height="100" rx="18" fill="#181825"/>
+  <rect x="20" y="22" width="88" height="76" rx="8" fill="url(#sky)"/>
+  <circle cx="88" cy="42" r="12" fill="#f9e2af"/>
+  <path d="M20 78 44 54l22 25 13-13 29 32H20Z" fill="url(#shade)"/>
+  <path d="M20 86 43 65l18 21 15-14 32 26H20Z" fill="#45475a"/>
+  <path d="M39 98h50v10H39z" fill="#cba6f7"/>
+  <path d="M50 111h28v5H50z" fill="#585b70"/>
+  <rect x="20" y="22" width="88" height="76" rx="8" fill="none" stroke="#cdd6f4" stroke-opacity=".26" stroke-width="3"/>
+</svg>

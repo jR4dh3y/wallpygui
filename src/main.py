@@ -136,7 +136,7 @@ class WallpaperApp(Gtk.Application):
     
     def _on_apply_wallpaper(self, path: str, resize: str):
         if not path or not Path(path).exists():
-            print(f"[wallgui] File not found: {path}")
+            print(f"[wallpygui] File not found: {path}")
             return
 
         # Disable the button and show progress while applying to avoid UI freeze
@@ -149,7 +149,7 @@ class WallpaperApp(Gtk.Application):
                 set_wallpaper(path, resize)
             except Exception as e:
                 success = False
-                print(f"[wallgui] Error applying wallpaper: {e}")
+                print(f"[wallpygui] Error applying wallpaper: {e}")
             finally:
                 # Re-enable controls on the GTK main loop
                 GLib.idle_add(self._on_apply_wallpaper_done, success)

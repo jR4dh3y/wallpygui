@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=WallpyGUI
+Exec=wallpygui
+Icon=wallpygui
+Categories=Utility;
+Terminal=false

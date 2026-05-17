@@ -5,7 +5,7 @@ from pathlib import Path
 SUPPORTED_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif", ".mp4", ".mkv", ".mov"}
 
 # Cache directory and files
-CACHE_DIR = Path.home() / ".cache" / "wallgui"
+CACHE_DIR = Path.home() / ".cache" / "wallpygui"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_FILE = CACHE_DIR / "config.json"
 
@@ -16,6 +16,6 @@ DEFAULT_CONFIG = {
 }
 
 # Application metadata
-APP_ID = "com.example.WallpaperApp"
-APP_TITLE = "Wallpaper Manager"
+APP_ID = "io.github.jR4dh3y.wallpygui"
+APP_TITLE = "WallpyGUI"
 APP_VERSION = "2.0.0"

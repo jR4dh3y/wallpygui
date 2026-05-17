@@ -1,1 +1,1 @@
-# Wallpaper Manager Package
+# WallpyGUI package
