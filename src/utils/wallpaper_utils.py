@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import hashlib
 import shutil
+import time
 
 from utils.constants import CACHE_DIR
 
@@ -43,6 +44,32 @@ def stop_video_wallpaper() -> None:
         no_stdout(["pkill", "mpvpaper"])
 
 
+def stop_image_wallpaper() -> None:
+    """Stop awww so video wallpapers do not render over the old image layer."""
+    if shutil.which("awww"):
+        no_stdout(["awww", "kill"])
+
+
+def ensure_awww_running() -> None:
+    """Start awww-daemon when needed and wait until it accepts commands."""
+    if not shutil.which("awww"):
+        raise RuntimeError("awww not found")
+
+    if no_stdout(["awww", "query"]).returncode == 0:
+        return
+
+    if not shutil.which("awww-daemon"):
+        raise RuntimeError("awww-daemon not found")
+
+    spawn(["awww-daemon", "--quiet", "--no-cache"])
+    for _ in range(20):
+        time.sleep(0.1)
+        if no_stdout(["awww", "query"]).returncode == 0:
+            return
+
+    raise RuntimeError("awww-daemon did not start")
+
+
 def reload_hyprland_if_running() -> None:
     """Reload Hyprland only when this process is running inside Hyprland."""
     if os.getenv("HYPRLAND_INSTANCE_SIGNATURE") and shutil.which("hyprctl"):
@@ -52,15 +79,8 @@ def reload_hyprland_if_running() -> None:
 def use_awww(img_path: str, resize: str = "crop") -> None:
     """Set wallpaper using awww."""
     stop_video_wallpaper()
-    # Ensure awww daemon is running; if not, initialize it
-    try:
-        probe = subprocess.run(["awww", "query"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if probe.returncode != 0:
-            no_stdout(["awww", "init"])
-    except Exception:
-        # Best-effort: continue to try setting the image
-        pass
-    no_stdout([
+
+    cmd = [
         "awww",
         "img",
         "--filter",
@@ -72,14 +92,73 @@ def use_awww(img_path: str, resize: str = "crop") -> None:
         "--transition-type",
         "center",
         img_path,
-    ])
+    ]
+
+    for _ in range(3):
+        ensure_awww_running()
+        result = no_stdout(cmd)
+        if result.returncode == 0:
+            return
+        time.sleep(0.2)
+
+    raise RuntimeError("awww failed to apply image wallpaper")
 
 
-def use_mpv(img_path: str) -> None:
+def _video_filter_for_resize(width: int, height: int, resize: str) -> str:
+    if resize == "fit":
+        return (
+            f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+            f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black"
+        )
+    if resize == "stretch":
+        return f"scale={width}:{height}"
+    return (
+        f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+        f"crop={width}:{height}"
+    )
+
+
+def _mpv_options_for_resize(resize: str) -> str:
+    options = ["no-audio", "loop"]
+    if resize == "crop":
+        options.append("panscan=1")
+    elif resize == "stretch":
+        options.append("keepaspect=no")
+    return " ".join(options)
+
+
+def _scaled_video_for_output(img_path: str, width: int, height: int, resize: str) -> str:
+    source = Path(img_path).resolve()
+    source_stat = source.stat()
+    scale_key = hashlib.sha256(
+        f"{source}:{source_stat.st_mtime_ns}:{source_stat.st_size}:{width}x{height}:{resize}".encode()
+    ).hexdigest()
+    scaled = CACHE_DIR / "scaled-videos" / f"{scale_key}.mp4"
+    scaled.parent.mkdir(parents=True, exist_ok=True)
+
+    if not scaled.exists():
+        result = no_stdout([
+            "ffmpeg",
+            "-y",
+            "-i",
+            img_path,
+            "-vf",
+            _video_filter_for_resize(width, height, resize),
+            "-an",
+            str(scaled),
+        ])
+        if result.returncode != 0:
+            scaled.unlink(missing_ok=True)
+
+    return str(scaled) if scaled.exists() else img_path
+
+
+def use_mpv(img_path: str, resize: str = "crop") -> None:
     """Set video wallpaper using mpvpaper, supporting Hyprland and Niri."""
     import json
 
     stop_video_wallpaper()
+    stop_image_wallpaper()
 
     def get_outputs() -> list[dict]:
         # Try Hyprland
@@ -129,57 +208,17 @@ def use_mpv(img_path: str) -> None:
 
         return []
     outputs = get_outputs()
-    width = min(o["width"] for o in outputs) if outputs else None
-    height = min(o["height"] for o in outputs) if outputs else None
-
-    result = subprocess.check_output([
-        "ffprobe",
-        "-v",
-        "error",
-        "-select_streams",
-        "v:0",
-        "-show_entries",
-        "stream=width,height",
-        "-of",
-        "csv=s=x:p=0",
-        img_path,
-    ], text=True).strip()
-
-    v_width, v_height = map(int, result.split("x"))
-
-    video = img_path
-    if width and v_width > width:
-        source = Path(img_path).resolve()
-        source_stat = source.stat()
-        scale_key = hashlib.sha256(
-            f"{source}:{source_stat.st_mtime_ns}:{source_stat.st_size}:{width}x{height}".encode()
-        ).hexdigest()
-        scaled = CACHE_DIR / "scaled-videos" / f"{scale_key}.mp4"
-        scaled.parent.mkdir(parents=True, exist_ok=True)
-        if not scaled.exists():
-            result = no_stdout([
-                "ffmpeg",
-                "-y",
-                "-i",
-                img_path,
-                "-vf",
-                f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
-                f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2",
-                str(scaled),
-            ])
-            if result.returncode != 0:
-                scaled.unlink(missing_ok=True)
-
-        if scaled.exists():
-            video = str(scaled)
-
+    mpv_options = _mpv_options_for_resize(resize)
     if outputs:
         for o in outputs:
+            video = _scaled_video_for_output(img_path, o["width"], o["height"], resize)
             # Use non-blocking spawn; mpvpaper is long-running
-            spawn(["mpvpaper", "-s", "-o", "no-audio loop", o["name"], video])
+            spawn(["mpvpaper", "-s", "-o", mpv_options, o["name"], video])
     else:
         # Fallback: try all outputs if compositor detection failed
-        spawn(["mpvpaper", "-s", "-o", "no-audio loop", "*", video])
+        spawn(["mpvpaper", "-s", "-o", mpv_options, "*", img_path])
+
+
 def set_wallpaper(img_path: str, resize: str = "crop") -> None:
     """Apply wallpaper depending on type (image/video)."""
     file_type = subprocess.check_output([
@@ -192,7 +231,7 @@ def set_wallpaper(img_path: str, resize: str = "crop") -> None:
     if file_type.startswith("image/"):
         use_awww(img_path, resize)
     elif file_type.startswith("video/"):
-        use_mpv(img_path)
+        use_mpv(img_path, resize)
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 
